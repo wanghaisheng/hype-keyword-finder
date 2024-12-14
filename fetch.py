@@ -72,6 +72,17 @@ links = [
     # Add other links as needed
 ]
 
+links=[
+
+        {"Facebook": f"https://www.facebook.com/hashtag/{hashtag}"},
+    {"Tiktok": f"https://www.tiktok.com/tag/{hashtag}?lang=en"},
+    {"Douyin": f"https://www.douyin.com/search/%23{hashtag}?source=normal_search&aid=ae28cade-2fa5-4e16-bc8f-7f06ead531b2&enter_from=main_page"},
+    {"Youtube": f"https://www.youtube.com/hashtag/{hashtag}"},
+    {"Quora": f"https://www.quora.com/search?q=%23{hashtag}"},
+    {"Kikstarter": f"https://www.kickstarter.com/discover/advanced?ref=nav_search&term=%23{hashtag}"},
+
+]
+
 # Print all links
 for link in links:
     for platform, url in link.items():
