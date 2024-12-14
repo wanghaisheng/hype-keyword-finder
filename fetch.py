@@ -7,7 +7,7 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from time import sleep
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # ASCII Art for a visual touch on script execution
 ASCII_ART = '''
@@ -45,6 +45,7 @@ def setup_arg_parser():
     parser.add_argument("-s", "--screenshot", help="Take a screenshot of each URL found", action="store_true")
     parser.add_argument("-r", "--rate-limit", help="Delay between screenshots in seconds", type=float, default=1)
     parser.add_argument("-o", "--output", help="Output file path", type=str)
+    parser.add_argument("--filter", help="Time filter for Wayback Machine API. Options: last_day, last_7_days, last_30_days", type=str)
     return parser
 
 def take_screenshots(urls, rate_limit):
@@ -68,13 +69,30 @@ def take_screenshots(urls, rate_limit):
     driver.quit()
     print(TerminalColors.OK + "[+] Done with screenshots!" + TerminalColors.RESET)
 
-def fetch_urls(domain, keyword, limit):
-    """ Fetch URLs from the Wayback Machine API based on the domain, optional keyword, and limit. """
+def fetch_urls(domain, keyword, limit, filter_option):
+    """ Fetch URLs from the Wayback Machine API based on the domain, optional keyword, limit, and filter. """
+    # Calculate date range based on the filter option
+    date_from = ""
+    date_to = ""
+
+    if filter_option == "last_day":
+        date_from = (datetime.now() - timedelta(days=1)).strftime("%Y%m%d")
+        date_to = datetime.now().strftime("%Y%m%d")
+    elif filter_option == "last_7_days":
+        date_from = (datetime.now() - timedelta(days=7)).strftime("%Y%m%d")
+        date_to = datetime.now().strftime("%Y%m%d")
+    elif filter_option == "last_30_days":
+        date_from = (datetime.now() - timedelta(days=30)).strftime("%Y%m%d")
+        date_to = datetime.now().strftime("%Y%m%d")
+
     url = f"{WAYBACK_API_URL}&url={domain}/"
     if keyword:
         url += f"&filter=urlkey:.*{keyword}"
+    if date_from and date_to:
+        url += f"&from={date_from}&to={date_to}"
     if limit:
         url += f"&limit={limit}"
+    
     response = requests.get(url)
     return response.text
 
@@ -93,7 +111,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        urls = fetch_urls(args.domain, args.keyword, args.limit)
+        urls = fetch_urls(args.domain, args.keyword, args.limit, args.filter)
         save_urls_to_file(urls)
         if args.screenshot:
             take_screenshots(urls, args.rate_limit)
