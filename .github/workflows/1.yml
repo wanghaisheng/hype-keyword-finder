@@ -4,10 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       filter:
-        description: 'Choose filter (30_days, 7_days, 1_day)'
-        type: environment
-        required: false
-        default: '1_day'
+        description: 'Choose the filter for the time range (30_days, 7_days, 1_day)'
+        type: choice
+        options:
+          - 30_days
+          - 7_days
+          - 1_day
+        default: 1_day
 
 jobs:
   fetch_wayback_machine_urls:
@@ -26,9 +29,9 @@ jobs:
       run: |
         pip install requests
 
-    - name: Run script
+    - name: Run the script with filter
       run: |
-        python3 fetch_wayback.py "${{ github.event.inputs.filter || '1_day' }}"
+        python3 fetch.py "${{ github.event.inputs.filter }}"
 
     - name: Commit and push the results if content changed
       run: |-
@@ -40,7 +43,7 @@ jobs:
         git add results/
         
         # Commit the changes with a dynamic message based on the filter
-        git commit -m "Add Wayback Machine results for filter ${GITHUB_EVENT_INPUTS_FILTER:-1_day}"
+        git commit -m "Add Wayback Machine results for filter ${{ github.event.inputs.filter }}"
         
         # Pull the latest changes to avoid conflicts
         git pull --rebase
