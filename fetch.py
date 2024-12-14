@@ -1,126 +1,86 @@
 #!/usr/bin/env python3
 
 import requests
-import sys
-import argparse
-from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
-from time import sleep
+import datetime
 import os
-from datetime import datetime, timedelta
+import sys
+import links from urls
 
-# ASCII Art for a visual touch on script execution
-ASCII_ART = '''
-             |
-       Atrax |
-             |
-         /   |   \
-         \   |   /
-       .  --\|/--  ,
-        '--|___|--'
-        ,--|___|--,
-       '  /\o o/\  `
-         +   +   +
-          `     ' 
-'''
+# Define the hashtag
+hashtag = "exampleHashtag"  # Replace with your actual hashtag
 
-# Class for defining terminal color codes for enhanced output readability
-class TerminalColors:
-    OK = '\033[92m'      # Green text
-    WARNING = '\033[93m' # Yellow text
-    FAIL = '\033[91m'    # Red text
-    RESET = '\033[0m'    # Reset to default
-    INFO = '\033[94m'    # Blue text
+# Define the list of links for the given hashtag
+links1 = [
+    {"Facebook": f"https://www.facebook.com/hashtag/{hashtag}"},
+    {"Instagram": f"https://www.instagram.com/explore/tags/{hashtag}"},
+    {"Vkontakte": f"https://vk.com/search?c%5Bq%5D=%23{hashtag}&c%5Bsection%5D=statuses"},
+    {"myMail": f"https://my.mail.ru/hashtag/{hashtag}"},
+    {"Pinterest": f"https://www.pinterest.com/search/pins/?q=%23{hashtag}&rs=typed&term_meta[]=%23{hashtag}%7Ctyped"},
+    # Add other platforms as needed...
+]
 
-# Constants for API URL and screenshot directory
+# Wayback Machine API base URL
 WAYBACK_API_URL = "https://web.archive.org/cdx/search?matchType=domain&collapse=urlkey&output=text&fl=original"
-SCREENSHOT_FOLDER = "screens/"
 
-def setup_arg_parser():
-    """ Set up and return the argument parser for command line arguments. """
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--domain", help="Target domain (e.g., target.com)", type=str, required=True)
-    parser.add_argument("-k", "--keyword", help="Specific extension or keyword (e.g., js, xml, json, pdf, css, admin, login)", type=str)
-    parser.add_argument("-l", "--limit", help="Limit (number of links)", type=int)
-    parser.add_argument("-s", "--screenshot", help="Take a screenshot of each URL found", action="store_true")
-    parser.add_argument("-r", "--rate-limit", help="Delay between screenshots in seconds", type=float, default=1)
-    parser.add_argument("-o", "--output", help="Output file path", type=str)
-    parser.add_argument("--filter", help="Time filter for Wayback Machine API. Options: last_day, last_7_days, last_30_days", type=str)
-    return parser
+# Function to calculate the timestamp for a given number of days ago
+def get_timestamp_for_days_ago(days):
+    return (datetime.datetime.now() - datetime.timedelta(days=days)).strftime("%Y%m%d%H%M%S")
 
-def take_screenshots(urls, rate_limit):
-    """ Take screenshots of the provided URLs using Selenium WebDriver. """
-    options = Options()
-    options.add_argument('--headless')  # Run browser in headless mode
-    driver = webdriver.Firefox(options=options)
-    driver.set_page_load_timeout(30)    # Timeout for page load
-    
-    print(TerminalColors.OK + "[+] Screening URLs..." + TerminalColors.RESET)
-    for i, url in enumerate(urls.split(), start=1):
-        try:
-            driver.get(url)
-            sleep(rate_limit)  # Wait for specified rate limit
-            screenshot_path = f"{SCREENSHOT_FOLDER}screen-{i}.png"
-            driver.save_screenshot(screenshot_path)
-            print(f"Screenshot saved: {screenshot_path}")
-        except Exception as e:
-            print(f"Error taking screenshot of {url}: {e}")
+# Function to fetch Wayback URLs for a given base URL and date range filter
+def fetch_wayback_urls(base_url, days_filter):
+    """ Fetch URLs from Wayback Machine based on the base URL and a date filter. """
+    # Get the timestamp for the date range
+    if days_filter == '30_days':
+        timestamp = get_timestamp_for_days_ago(30)
+    elif days_filter == '7_days':
+        timestamp = get_timestamp_for_days_ago(7)
+    elif days_filter == '1_day':  # Default filter
+        timestamp = get_timestamp_for_days_ago(1)
+    else:
+        raise ValueError("Invalid filter. Choose '30_days', '7_days', or '1_day'.")
 
-    driver.quit()
-    print(TerminalColors.OK + "[+] Done with screenshots!" + TerminalColors.RESET)
-
-def fetch_urls(domain, keyword, limit, filter_option):
-    """ Fetch URLs from the Wayback Machine API based on the domain, optional keyword, limit, and filter. """
-    # Calculate date range based on the filter option
-    date_from = ""
-    date_to = ""
-
-    if filter_option == "last_day":
-        date_from = (datetime.now() - timedelta(days=1)).strftime("%Y%m%d")
-        date_to = datetime.now().strftime("%Y%m%d")
-    elif filter_option == "last_7_days":
-        date_from = (datetime.now() - timedelta(days=7)).strftime("%Y%m%d")
-        date_to = datetime.now().strftime("%Y%m%d")
-    elif filter_option == "last_30_days":
-        date_from = (datetime.now() - timedelta(days=30)).strftime("%Y%m%d")
-        date_to = datetime.now().strftime("%Y%m%d")
-
-    url = f"{WAYBACK_API_URL}&url={domain}/"
-    if keyword:
-        url += f"&filter=urlkey:.*{keyword}"
-    if date_from and date_to:
-        url += f"&from={date_from}&to={date_to}"
-    if limit:
-        url += f"&limit={limit}"
-    
+    # Construct the API URL with the timestamp filter
+    url = f"{WAYBACK_API_URL}&url={base_url}/&timestamp={timestamp}"
     response = requests.get(url)
     return response.text
 
-def save_urls_to_file(urls):
-    """ Save the fetched URLs to a file named after the current date. """
-    current_date = datetime.now().strftime("%Y-%m-%d")
-    file_path = f"wayback_urls_{current_date}.txt"
-    with open(file_path, "w") as file:
-        file.write(urls)
-    print(f"URLs saved to {file_path}")
+# Function to save the fetched URLs to a file
+def save_to_file(platform, filter_option, data):
+    """ Save the fetched data to a file with a name that includes the platform, filter option, and current date. """
+    # Get today's date in YYYY-MM-DD format
+    current_date = datetime.datetime.now().strftime("%Y-%m-%d")
+    
+    # Create a filename based on platform, filter, and date
+    filename = f"results/{platform}_{filter_option}_{current_date}.txt"
+    
+    # Ensure the results directory exists
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
 
-def main():
-    """ Main function to orchestrate the script's functionalities. """
-    print(ASCII_ART)
-    parser = setup_arg_parser()
-    args = parser.parse_args()
+    # Open the file in append mode and write the data
+    with open(filename, "a") as file:
+        file.write(f"Results for {platform} ({filter_option}) on {current_date}:\n")
+        file.write(data)
+        file.write("\n\n")  # Add spacing between different results
 
-    try:
-        urls = fetch_urls(args.domain, args.keyword, args.limit, args.filter)
-        save_urls_to_file(urls)
-        if args.screenshot:
-            take_screenshots(urls, args.rate_limit)
-    except Exception as e:
-        print(TerminalColors.FAIL + f"[!] Error: {e}" + TerminalColors.RESET)
+    print(f"Results saved to {filename}")
 
-if __name__ == "__main__":
-    # Ensure the script only runs when not imported as a module
-    try:
-        main()
-    except KeyboardInterrupt:
-        print(TerminalColors.FAIL + "[!] Script canceled by user." + TerminalColors.RESET)
+# Main function to process the links and fetch archived URLs from Wayback Machine
+def process_links(filter_option):
+    # Process each link
+    for link in links:
+        for platform, url in link.items():
+            base_url = url.split(f"%23{hashtag}")[0]  # Extract the part before the hashtag
+            print(f"Fetching Wayback Machine URLs for {platform}: {base_url}")
+            
+            # Fetch and save the result from Wayback Machine API
+            try:
+                wayback_urls = fetch_wayback_urls(base_url, filter_option)
+                save_to_file(platform, filter_option, wayback_urls)
+            except Exception as e:
+                print(f"Error fetching data for {platform}: {e}")
+
+# Read the filter option from the command-line arguments (passed from GitHub Actions)
+filter_option = sys.argv[1] if len(sys.argv) > 1 else '1_day'  # Default to '1_day'
+
+# Call the main function
+process_links(filter_option)
