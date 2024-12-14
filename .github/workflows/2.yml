@@ -1,0 +1,45 @@
+name: Google Search Parser from Wayback Machine
+
+on:
+  workflow_dispatch:  # This allows manual trigger from the GitHub UI.
+    inputs:
+      wayback_machine_results_file:
+        description: 'Path to the Wayback Machine results CSV file'
+        required: true
+        type: string
+      output_file:
+        description: 'Path to output the Google search results CSV file'
+        required: true
+        type: string
+
+jobs:
+  google_search:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+
+    - name: Install required Python dependencies
+      run: |
+        pip install requests beautifulsoup4 pandas
+
+    - name: Run the Google search parser script
+      run: |
+        python google_search_parser_from_wayback.py \
+          --input_file ${{ github.event.inputs.wayback_machine_results_file }} \
+          --output_file ${{ github.event.inputs.output_file }}
+
+    - name: Commit the results to the repository if there's a change
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@users.noreply.github.com"
+        git add -A
+        git diff --quiet || git commit -m "Add new Google search results"
+        git pull --rebase
+        git push
