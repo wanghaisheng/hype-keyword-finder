@@ -1,0 +1,50 @@
+name: Fetch Wayback Machine URLs
+
+on:
+  workflow_dispatch:
+    inputs:
+      filter:
+        description: 'Choose filter (30_days, 7_days, 1_day)'
+        type: environment
+        required: false
+        default: '1_day'
+
+jobs:
+  fetch_wayback_machine_urls:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install required libraries
+      run: |
+        pip install requests
+
+    - name: Run script
+      run: |
+        python3 fetch_wayback.py "${{ github.event.inputs.filter || '1_day' }}"
+
+    - name: Commit and push the results if content changed
+      run: |-
+        # Configure Git user details for commit
+        git config user.name "Automated"
+        git config user.email "actions@users.noreply.github.com"
+        
+        # Add all the new/modified files to git
+        git add results/
+        
+        # Commit the changes with a dynamic message based on the filter
+        git commit -m "Add Wayback Machine results for filter ${GITHUB_EVENT_INPUTS_FILTER:-1_day}"
+        
+        # Pull the latest changes to avoid conflicts
+        git pull --rebase
+        
+        # Push the changes to the repository
+        git push
+        
