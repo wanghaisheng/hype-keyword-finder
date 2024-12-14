@@ -4,7 +4,7 @@ import requests
 import datetime
 import os
 import sys
-import links from urls
+import links from ./urls
 
 # Define the hashtag
 hashtag = "exampleHashtag"  # Replace with your actual hashtag
