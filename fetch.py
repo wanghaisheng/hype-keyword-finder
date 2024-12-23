@@ -11,12 +11,12 @@ hashtag = ""  # Replace with your actual hashtag
 
 # Define the list of links for the given hashtag
 links = [
-    {"Facebook": f"https://www.facebook.com/hashtag/{hashtag}"},
-    {"Tiktok": f"https://www.tiktok.com/tag/{hashtag}?lang=en"},
-    # {"Douyin": f"https://www.douyin.com/search/%23{hashtag}?source=normal_search&aid=ae28cade-2fa5-4e16-bc8f-7f06ead531b2&enter_from="},
-    {"Youtube": f"https://www.youtube.com/hashtag/{hashtag}"},
-    {"Quora": f"https://www.quora.com/search?q=%23{hashtag}"},
-    {"Kickstarter": f"https://www.kickstarter.com/discover/advanced?ref=nav_search&term=%23{hashtag}"},
+    {"Facebook": f"https://www.facebook.com/hashtag/"},
+    {"Tiktok": f"https://www.tiktok.com/tag/"},
+    {"Douyin": f"https://www.douyin.com/search/%23"},
+    {"Youtube": f"https://www.youtube.com/hashtag"},
+    {"Quora": f"https://www.quora.com/search?q=%23"},
+    {"Kickstarter": f"https://www.kickstarter.com/discover/advanced?ref=nav_search&term=%23"},
 ]
 
 # Wayback Machine API base URL
