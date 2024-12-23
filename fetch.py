@@ -57,6 +57,7 @@ def fetch_wayback_urls(base_url, filter_option):
                                      start_timestamp=start, end_timestamp=end)
     urls=[]
     for item in cdx.snapshots():
+        print('-------'.item)
         url=item.archive_url
         urls.append(url)
     
