@@ -4,6 +4,7 @@ import requests
 import datetime
 import os
 import sys
+from waybackpy import WaybackMachineCDXServerAPI
 
 # Define the hashtag
 hashtag = "exampleHashtag"  # Replace with your actual hashtag
@@ -36,7 +37,7 @@ def get_time_range(filter_option):
     return start, end
 
 # Function to fetch Wayback URLs for a given base URL and date range filter
-def fetch_wayback_urls(base_url, filter_option):
+def fetch_wayback_urls1(base_url, filter_option):
     """Fetch URLs from Wayback Machine based on the base URL and a date range."""
     # Get the start and end timestamps for the date range
     start, end = get_time_range(filter_option)
@@ -46,8 +47,17 @@ def fetch_wayback_urls(base_url, filter_option):
     response = requests.get(url)
     response.raise_for_status()  # Raise an error for HTTP issues
     return response.text
-
-# Function to save the fetched URLs to a file
+def fetch_wayback_urls(base_url, filter_option):
+    start, end = get_time_range(filter_option)
+    user_agent = "Mozilla/5.0 (Windows NT 5.1; rv:40.0) Gecko/20100101 Firefox/40.0"
+    cdx = WaybackMachineCDXServerAPI(url, user_agent, start_timestamp=start, end_timestamp=end)
+    urls=[]
+    for item in cdx.snapshots():
+        url=item.archive_url
+        urls.append(url)
+    
+    
+    # Function to save the fetched URLs to a file
 def save_to_file(platform, filter_option, data):
     """Save the fetched data to a file with a name that includes the platform, filter option, and current date."""
     # Get today's date in YYYY-MM-DD format
