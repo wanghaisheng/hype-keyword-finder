@@ -27,7 +27,7 @@ jobs:
 
     - name: Install required libraries
       run: |
-        pip install requests
+        pip install requests waybackpy
 
     - name: Run the script with filter
       run: |
