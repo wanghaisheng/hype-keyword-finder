@@ -18,6 +18,9 @@ links = [
     {"Quora": f"https://www.quora.com/search?q=%23"},
     {"Kickstarter": f"https://www.kickstarter.com/discover/advanced?ref=nav_search&term=%23"},
 ]
+links = [
+    {"Tiktok": f"https://www.tiktok.com/tag/"}
+]
 
 # Wayback Machine API base URL
 WAYBACK_API_URL = "https://web.archive.org/cdx/search?matchType=domain&collapse=urlkey&output=text&fl=original"
@@ -58,7 +61,7 @@ def fetch_wayback_urls(base_url, filter_option):
                                      start_timestamp=start[:7], end_timestamp=end[:7])
     urls=[]
     for item in cdx.snapshots():
-        print('-------'.item)
+        print('-------',item)
         url=item.archive_url
         urls.append(url)
     
