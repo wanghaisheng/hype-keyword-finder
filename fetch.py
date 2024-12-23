@@ -51,7 +51,10 @@ def fetch_wayback_urls(base_url, filter_option):
     start, end = get_time_range(filter_option)
     user_agent = "Mozilla/5.0 (Windows NT 5.1; rv:40.0) Gecko/20100101 Firefox/40.0"
     print('========',start,end)
-    cdx = WaybackMachineCDXServerAPI(base_url, user_agent, start_timestamp=start, end_timestamp=end)
+    cdx = WaybackMachineCDXServerAPI(base_url, user_agent,
+                                            match_type="prefix",
+ 
+                                     start_timestamp=start, end_timestamp=end)
     urls=[]
     for item in cdx.snapshots():
         url=item.archive_url
